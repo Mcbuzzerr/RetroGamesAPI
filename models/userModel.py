@@ -50,6 +50,7 @@ class UserUpdate(BaseModel):
     password: Optional[str]
     date_of_birth: Optional[datetime.date]
     street_address: Optional[Address]
+    games: Optional[GameList]
 
 
 class User(Document, UserOut):

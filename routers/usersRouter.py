@@ -59,6 +59,7 @@ async def update_user(userID: PydanticObjectId, userIn: UserUpdate):
     user.password = userIn.password
     user.date_of_birth = userIn.date_of_birth
     user.street_address = userIn.street_address
+    user.games = userIn.games
     print(user)
     await user.save()
     return UserOut(**user.dict())
