@@ -71,9 +71,13 @@ class GameAbstract(Document):
     release_date: datetime.date
     platforms: list[str]
     tags: list[Tags]
+    usersWithGame: list[str] = []  # list of users who own this game
 
     class Settings:
         name = "Games"
+        bson_encoders = {
+            datetime.date: lambda v: v.isoformat(),  # Copilot gave me this and idk what its doing, ask a python expert
+        }
 
 
 class OwnedGame(BaseModel):
