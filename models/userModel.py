@@ -2,7 +2,13 @@ import datetime
 from pydantic import BaseModel
 from beanie import PydanticObjectId, Document
 from typing import Optional
-from .gameModel import GameList, Tags
+from .gameModel import Tags, OwnedGame
+
+# I need hypermedia functionality
+# idea, users have a different form of the game class
+# this one stores only the info unique to their copy, and a link to the abstract version of that game
+# Games collection stores the abstract version of the game
+# Users gamesList stores the link to the abstract version of the game and the condition
 
 
 class Address(BaseModel):
@@ -19,25 +25,14 @@ class UserOut(BaseModel):
     id: PydanticObjectId
     username: str
     email: str
-    games: Optional[GameList]
+    games: list[OwnedGame] = []
 
     class Config:
         schema_extra = {
             "example": {
                 "username": "XxX_The_Gamer_XxX",
                 "email": "GamerGod@gmail.com",
-                "games": [
-                    {
-                        "name": "Crash Bandicoot",
-                        "publisher": "Naughty Dog",
-                        "release_date": "1996-10-0",
-                        "platforms": ["Playstation", "Playstation 2", "Playstation 3"],
-                        "owner_history": ["XxX_The_Gamer_XxX"],
-                        "tags": [
-                            Tags.Platformer,
-                        ],
-                    },
-                ],
+                "games": [],
             }
         }
 
@@ -50,7 +45,7 @@ class UserUpdate(BaseModel):
     password: Optional[str]
     date_of_birth: Optional[datetime.date]
     street_address: Optional[Address]
-    games: Optional[GameList]
+    games: Optional[list[OwnedGame]]
 
 
 class User(Document, UserOut):
@@ -93,7 +88,3 @@ class UserRegister(BaseModel):
                 },
             }
         }
-
-
-class UserList(BaseModel):
-    users: list[UserOut] = []

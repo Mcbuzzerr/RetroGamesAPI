@@ -1,10 +1,10 @@
 from pydantic import BaseModel
-from models.gameModel import GameList
+from models.gameModel import GameAbstract
 
 
 class SearchResults(BaseModel):
-    titleResults: GameList
-    tagResults: GameList
-    platformResults: GameList
-    publisherResults: GameList
+    titleResults: list[GameAbstract]
+    tagResults: list[GameAbstract]
+    platformResults: list[GameAbstract]
+    publisherResults: list[GameAbstract]
     total: int

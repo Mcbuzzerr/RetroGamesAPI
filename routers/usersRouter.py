@@ -1,7 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 from beanie import PydanticObjectId
-from models.userModel import User, UserOut, UserRegister, UserList, UserUpdate
-from models.gameModel import Game, GameOut, GameList
+from models.userModel import User, UserOut, UserRegister, UserUpdate
 from models import Tags
 from decouple import config
 import bcrypt
@@ -40,11 +39,11 @@ async def get_users(userID: PydanticObjectId):
     return UserOut(**user.dict())
 
 
-@router.get("", response_model=UserList, status_code=status.HTTP_200_OK)
+@router.get("", response_model=list[UserOut], status_code=status.HTTP_200_OK)
 async def get_users():
-    userList = UserList()
+    userList: list[UserOut] = []
     async for user in User.find_all():
-        userList.users.append(UserOut(**user.dict()))
+        userList.append(UserOut(**user.dict()))
     return userList
 
 
@@ -67,12 +66,12 @@ async def update_user(userID: PydanticObjectId, userIn: UserUpdate):
 
 # Delete
 @router.delete(
-    "/{userID}", response_model=UserList, status_code=status.HTTP_202_ACCEPTED
+    "/{userID}", response_model=list[UserOut], status_code=status.HTTP_202_ACCEPTED
 )
 async def delete_user(userID: PydanticObjectId):
     user = await User.get(userID)
     await user.delete()
-    userList = UserList()
+    userList: list[UserOut] = []
     async for user in User.find_all():
-        userList.users.append(UserOut(**user.dict()))
+        userList.append(UserOut(**user.dict()))
     return userList

@@ -3,7 +3,7 @@ from beanie import init_beanie
 from motor.motor_asyncio import AsyncIOMotorClient
 from routers import usersRouter, gamesRouter
 from models.userModel import User
-from models.gameModel import Game
+from models.gameModel import GameAbstract, OwnedGame
 from decouple import config
 
 app = FastAPI()
@@ -16,7 +16,9 @@ app.include_router(gamesRouter.router)
 async def app_init():
     """Initialize application services"""
     app.databaseClient = AsyncIOMotorClient(config("MONGO_URI"))
-    await init_beanie(database=app.databaseClient.Users, document_models=[User])
+    await init_beanie(
+        database=app.databaseClient.RetroGames, document_models=[User, GameAbstract]
+    )
 
 
 if __name__ == "__main__":

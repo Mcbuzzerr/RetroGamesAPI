@@ -62,24 +62,29 @@ class Tags(Enum):
     )
 
 
-class GameOut(BaseModel):
+class GameAbstract(Document):
+    """Game DB representation"""
+
+    id: PydanticObjectId = PydanticObjectId()
     name: str
     publisher: str
     release_date: datetime.date
     platforms: list[str]
-    owner_history: list[str]
     tags: list[Tags]
-
-
-class Game(Document, GameOut):
-    """Game DB representation"""
-
-    id: PydanticObjectId = PydanticObjectId()
-    owner: str
 
     class Settings:
         name = "Games"
 
 
-class GameList(BaseModel):
-    games: list[GameOut]
+class OwnedGame(BaseModel):
+    game: str  # link to the abstract version of the game
+    condition: str
+    owner: str  # link to the user who owns the game
+    ownerHistory: list[str]  # list of users who have owned the game
+
+
+# I need hypermedia functionality
+# idea, users have a different form of the game class
+# this one stores only the info unique to their copy, and a link to the abstract version of that game
+# Games collection stores the abstract version of the game
+# Users gamesList stores the link to the abstract version of the game and the condition
