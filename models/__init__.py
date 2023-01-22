@@ -6,3 +6,4 @@ class Tags(Enum):
 
     Users = "Users"
     Games = "Games"
+    Trades = "Trades"

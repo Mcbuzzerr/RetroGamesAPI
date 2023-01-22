@@ -1,8 +1,11 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from beanie import PydanticObjectId
 from models.userModel import User, UserOut, UserRegister, UserUpdate
 from models import Tags
 from decouple import config
+from datetime import timedelta
+from dependencies import create_access_token
 import bcrypt
 
 router = APIRouter(
@@ -14,6 +17,33 @@ router = APIRouter(
     },
     tags=[Tags.Users],
 )
+
+
+@router.post("/token", status_code=status.HTTP_200_OK)
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Incorrect username or password",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    user = await User.find_one(User.email == form_data.username)
+    if user:
+        if bcrypt.checkpw(
+            form_data.password.encode("utf-8"), user.password.encode("utf-8")
+        ):
+            access_token_expires = timedelta(
+                minutes=int(config("ACCESS_TOKEN_EXPIRE_MINUTES"))
+            )
+            access_token = create_access_token(
+                data={"sub": user.email}, expires_delta=access_token_expires
+            )
+            return {"access_token": access_token, "token_type": "bearer"}
+        else:
+            raise exception
+    else:
+        raise exception
+
 
 # Create
 @router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)

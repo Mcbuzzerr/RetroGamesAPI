@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from beanie import PydanticObjectId, Document
 from typing import Optional
 from .gameModel import Tags, OwnedGame
+from .tradeModel import TradeOffer
 
 # I need hypermedia functionality
 # idea, users have a different form of the game class
@@ -26,6 +27,8 @@ class UserOut(BaseModel):
     username: str
     email: str
     games: list[OwnedGame] = []
+    tradeHistory: list[TradeOffer] = []
+    # LIST OF TRADE OFFERS GOES ON ONE OF THE USER MODELS, both parties included
 
     class Config:
         schema_extra = {
@@ -57,11 +60,12 @@ class User(Document, UserOut):
     last_name: str = "Doe"
     date_of_birth: Optional[datetime.date]
     street_address: Address
+    # disabled: bool = False # This would be instead of deleting the user
 
     class Settings:
         name = "Users"
         bson_encoders = {
-            datetime.date: lambda v: v.isoformat(),  # Copilot gave me this and idk what its doing, ask a python expert
+            datetime.date: lambda v: v.isoformat(),
         }
 
 
@@ -86,5 +90,22 @@ class UserRegister(BaseModel):
                     "zipcode": "12345",
                     "country": "USA",
                 },
+            }
+        }
+
+
+# I don't think I'm actually using this
+class UserAuth(BaseModel):
+    """User fields required to authenticate"""
+
+    token: str
+    email: str
+    password: str
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "email": "GodGamer@gmail.com",
+                "password": "l33tH4x0r",
             }
         }
