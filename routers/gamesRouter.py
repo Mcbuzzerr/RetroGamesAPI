@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends, Body
 from beanie import PydanticObjectId
+from dependencies import oath2_scheme, get_current_user, generate_url
 from models.userModel import User, UserOut
 from models.gameModel import GameAbstract, OwnedGame
 from models.searchModel import SearchResults
@@ -22,7 +23,17 @@ router = APIRouter(
     status_code=status.HTTP_201_CREATED,
     tags=[Tags.Games],
 )
-async def create_game(gameIn: GameAbstract):
+async def create_game(
+    gameIn: GameAbstract = Body(
+        example={
+            "name": "Super Mario Bros",
+            "publisher": "Nintendo",
+            "release_date": "1985-09-13",
+            "platforms": ["NES"],
+            "tags": ["Platformer", "Action", "Adventure"],
+        }
+    )
+):
     return await GameAbstract(
         id=PydanticObjectId(),
         name=gameIn.name,
@@ -51,7 +62,18 @@ async def get_game(game_id: PydanticObjectId):
 @router.put(
     "/{game_id}", response_model=GameAbstract, status_code=status.HTTP_202_ACCEPTED
 )
-async def update_game(game_id: PydanticObjectId, gameIn: GameAbstract):
+async def update_game(
+    game_id: PydanticObjectId,
+    gameIn: GameAbstract = Body(
+        example={
+            "name": "Super Mario Bros",
+            "publisher": "Nintendo",
+            "release_date": "1985-09-13",
+            "platforms": ["NES"],
+            "tags": ["Platformer", "Action", "Adventure"],
+        }
+    ),
+):
     game = await GameAbstract.get(game_id)
     game.name = gameIn.name
     game.publisher = gameIn.publisher
@@ -59,11 +81,6 @@ async def update_game(game_id: PydanticObjectId, gameIn: GameAbstract):
     game.platforms = gameIn.platforms
     game.tags = gameIn.tags
     return await game.save()
-
-
-# @router.put("", response_model=list[GameAbstract], status_code=status.HTTP_202_ACCEPTED)
-# async def update_games():
-#     return {"message": "Hello World"}
 
 
 # Delete
@@ -83,7 +100,7 @@ async def delete_game(game_id: PydanticObjectId):
 
 # Search
 @router.get("/search/{search_term}", response_model=SearchResults)
-async def search_games(search_term: str):
+async def search_games(search_term: str, user: User = Depends(oath2_scheme)):
     totalResults = 0
     nameSearch = []
     async for game in GameAbstract.find({"name": {"$regex": search_term}}).limit(25):

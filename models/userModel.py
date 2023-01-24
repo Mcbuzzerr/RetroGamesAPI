@@ -27,8 +27,7 @@ class UserOut(BaseModel):
     username: str
     email: str
     games: list[OwnedGame] = []
-    tradeHistory: list[TradeOffer] = []
-    # LIST OF TRADE OFFERS GOES ON ONE OF THE USER MODELS, both parties included
+    tradeHistory: list[str] = []
 
     class Config:
         schema_extra = {
@@ -90,22 +89,5 @@ class UserRegister(BaseModel):
                     "zipcode": "12345",
                     "country": "USA",
                 },
-            }
-        }
-
-
-# I don't think I'm actually using this
-class UserAuth(BaseModel):
-    """User fields required to authenticate"""
-
-    token: str
-    email: str
-    password: str
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "email": "GodGamer@gmail.com",
-                "password": "l33tH4x0r",
             }
         }

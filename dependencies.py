@@ -1,6 +1,7 @@
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends, HTTPException, status
 from pydantic import BaseModel
+from beanie import PydanticObjectId
 from datetime import datetime, timedelta
 from typing import Optional
 from decouple import config
@@ -52,3 +53,8 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
         to_encode, config("SECRET_KEY"), algorithm=config("ALGORITHM")
     )
     return encoded_jwt
+
+
+def generate_url(resource: str, id: PydanticObjectId):
+    urlStart = "http://127.0.0.1:8000"
+    return f"{urlStart}/{resource}/{id}"

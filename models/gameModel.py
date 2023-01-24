@@ -1,5 +1,6 @@
 import datetime
 from pydantic import BaseModel
+from typing import Optional
 from beanie import PydanticObjectId, Document
 from enum import Enum
 
@@ -71,7 +72,6 @@ class GameAbstract(Document):
     release_date: datetime.date
     platforms: list[str]
     tags: list[Tags]
-    usersWithGame: list[str] = []  # list of users who own this game
 
     class Settings:
         name = "Games"
@@ -81,10 +81,12 @@ class GameAbstract(Document):
 
 
 class OwnedGame(BaseModel):
-    game: str  # link to the abstract version of the game
-    condition: str
-    owner: str  # link to the user who owns the game
-    ownerHistory: list[str]  # list of users who have owned the game
+    id: Optional[PydanticObjectId]
+    game: Optional[str]  # link to the abstract version of the game
+    name: Optional[str]
+    condition: Optional[str]
+    owner: Optional[str]  # link to the user who owns the game
+    ownerHistory: Optional[list[str]] = []  # list of users who have owned the game
 
 
 # I need hypermedia functionality
