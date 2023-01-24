@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status, Depends, Body
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from beanie import PydanticObjectId
-from models.userModel import User, UserOut, UserRegister, UserUpdate
+from models.userModel import User, UserOut, UserRegister, UserUpdate, UserNewPassword
 from models.gameModel import OwnedGame, GameAbstract
 from models import Tags
 from decouple import config
@@ -16,11 +16,16 @@ router = APIRouter(
         500: {"description": "Server Error"},
         403: {"description": "Forbidden"},
     },
-    tags=[Tags.Users],
 )
 
 
-@router.post("/token", status_code=status.HTTP_200_OK)
+@router.post(
+    "/token",
+    status_code=status.HTTP_200_OK,
+    summary="Login Endpoint",
+    description="This endpoint is used to login, it provides a JWT token that can be used to access the API",
+    tags=[Tags.Auth],
+)
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -46,8 +51,27 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         raise exception
 
 
+@router.get(
+    "/test",
+    response_model=User,
+    status_code=status.HTTP_200_OK,
+    tags=[Tags.Test],
+    summary="Test endpoint",
+    description="This endpoint is used to test the authentication, returns the current full user object",
+)
+async def test(user: User = Depends(get_current_user)):
+    return user
+
+
 # Create
-@router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register",
+    response_model=UserOut,
+    status_code=status.HTTP_201_CREATED,
+    summary="Register Endpoint",
+    description="This endpoint is used to register a new user",
+    tags=[Tags.Auth],
+)
 async def create_user(newUser: UserRegister):
     user = await User(
         id=PydanticObjectId(),
@@ -63,12 +87,43 @@ async def create_user(newUser: UserRegister):
     return UserOut(**user.dict())
 
 
-@router.get("", response_model=list[UserOut], status_code=status.HTTP_200_OK)
+@router.get(
+    "",
+    response_model=list[UserOut],
+    status_code=status.HTTP_200_OK,
+    summary="Get all users",
+    description="This endpoint is used to get all users",
+    tags=[Tags.Users],
+)
 async def get_users():
     userList: list[UserOut] = []
     async for user in User.find_all():
         userList.append(UserOut(**user.dict()))
     return userList
+
+
+@router.patch(
+    "/change-password",
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Change password",
+    description="This endpoint is used to change the password of the current user",
+    tags=[Tags.Auth],
+)
+async def change_password(
+    body: UserNewPassword, currentUser: User = Depends(get_current_user)
+):
+    if bcrypt.checkpw(
+        body.oldPassword.encode("utf-8"), currentUser.password.encode("utf-8")
+    ):
+        currentUser.password = bcrypt.hashpw(
+            body.newPassword.encode("utf-8"), bcrypt.gensalt()
+        )
+        await currentUser.save()
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect password",
+        )
 
 
 # LIBRARY FUNCTIONS
@@ -77,6 +132,8 @@ async def get_users():
     response_model=list[OwnedGame],
     status_code=status.HTTP_201_CREATED,
     tags=[Tags.Library],
+    summary="Add game to library",
+    description="This endpoint is used to add a game to the current user's library",
 )
 async def add_game(
     gameIn: OwnedGame = Body(
@@ -108,6 +165,8 @@ async def add_game(
     response_model=list[OwnedGame],
     status_code=status.HTTP_200_OK,
     tags=[Tags.Library],
+    summary="Get library",
+    description="This endpoint is used to get the current user's library",
 )
 async def get_library(currentUser: User = Depends(get_current_user)):
     return currentUser.games
@@ -118,6 +177,8 @@ async def get_library(currentUser: User = Depends(get_current_user)):
     tags=[Tags.Library],
     status_code=status.HTTP_202_ACCEPTED,
     response_model=list[OwnedGame],
+    summary="Delete game from library",
+    description="This endpoint is used to delete a game from the current user's library",
 )
 async def delete_game(
     gameID: PydanticObjectId, currentUser: User = Depends(get_current_user)
@@ -139,6 +200,8 @@ async def delete_game(
     tags=[Tags.Library],
     status_code=status.HTTP_202_ACCEPTED,
     response_model=OwnedGame,
+    summary="Update game in library",
+    description="This endpoint is used to update a game in the current user's library (the only editible data is the condition)",
 )
 async def update_game(
     gameID: PydanticObjectId,
@@ -158,39 +221,63 @@ async def update_game(
 # ------------------------- USER ROUTES ------------------------- #
 
 # Read
-@router.get("/{userID}", response_model=UserOut, status_code=status.HTTP_200_OK)
+@router.get(
+    "/{userID}",
+    response_model=UserOut,
+    status_code=status.HTTP_200_OK,
+    summary="Get user",
+    description="This endpoint is used to get a user by ID",
+    tags=[Tags.Users],
+)
 async def get_users(userID: PydanticObjectId):
     user = await User.get(userID)
     return UserOut(**user.dict())
 
 
 # Update
-@router.patch("/{userID}", response_model=UserOut, status_code=status.HTTP_202_ACCEPTED)
+@router.patch(
+    "/{userID}",
+    response_model=UserOut,
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Update user",
+    description="This endpoint is used to update a user by ID. The only editable data is the username, first name, last name, and date of birth. The password must be changed using the change-password endpoint",
+    tags=[Tags.Users],
+)
 async def update_user(userID: PydanticObjectId, userIn: UserUpdate):
     user = await User.get(userID)
-    print(user)
+
+    if not bcrypt.checkpw(
+        userIn.password.encode("utf-8"), user.password.encode("utf-8")
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect password",
+        )
+
     if userIn.username is not None:
         user.username = userIn.username
     if userIn.first_name is not None:
         user.first_name = userIn.first_name
     if userIn.last_name is not None:
         user.last_name = userIn.last_name
-    if userIn.password is not None:
-        user.password = bcrypt.hashpw(userIn.password, bcrypt.gensalt())
     if userIn.date_of_birth is not None:
         user.date_of_birth = userIn.date_of_birth
     if userIn.street_address is not None:
         user.street_address = userIn.street_address
     if userIn.games is not None:
         user.games = userIn.games
-    print(user)
     await user.save()
     return UserOut(**user.dict())
 
 
 # Delete
 @router.delete(
-    "/{userID}", response_model=list[UserOut], status_code=status.HTTP_202_ACCEPTED
+    "/{userID}",
+    response_model=list[UserOut],
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Delete user",
+    description="This endpoint is used to delete a user by ID",
+    tags=[Tags.Users],
 )
 async def delete_user(userID: PydanticObjectId):
     user = await User.get(userID)

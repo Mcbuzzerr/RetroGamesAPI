@@ -8,3 +8,5 @@ class Tags(Enum):
     Games = "Games"
     Trades = "Trades"
     Library = "Library"
+    Auth = "Auth"
+    Test = "Test"

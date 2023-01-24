@@ -19,7 +19,11 @@ router = APIRouter(
 # REQUIRES AUTH FIRST, THATS HOW WE GET CURRENT USER
 # Create
 @router.post(
-    "/request/{userID}", response_model=TradeOffer, status_code=status.HTTP_201_CREATED
+    "/request/{userID}",
+    response_model=TradeOffer,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a new trade",
+    description="This endpoint is used to create a new trade",
 )
 async def create_trade(
     userID: PydanticObjectId,
@@ -93,7 +97,11 @@ async def create_trade(
 
 
 @router.get(
-    "/myTrades", response_model=list[TradeOffer], status_code=status.HTTP_200_OK
+    "/myTrades",
+    response_model=list[TradeOffer],
+    status_code=status.HTTP_200_OK,
+    summary="Get all trades for a user",
+    description="This endpoint is used to get all trades for a user",
 )
 async def get_user_trades(user: User = Depends(get_current_user)):
     trades: list[TradeOffer] = []
@@ -104,7 +112,11 @@ async def get_user_trades(user: User = Depends(get_current_user)):
 
 
 @router.get(
-    "/myTrades/pending", response_model=list[TradeOffer], status_code=status.HTTP_200_OK
+    "/myTrades/pending",
+    response_model=list[TradeOffer],
+    status_code=status.HTTP_200_OK,
+    summary="Get all pending trades for a user",
+    description="This endpoint is used to get all pending trades for a user",
 )
 async def get_user_pending_trades(user: User = Depends(get_current_user)):
     trades: list[TradeOffer] = []
@@ -120,6 +132,8 @@ async def get_user_pending_trades(user: User = Depends(get_current_user)):
     "/myTrades/accepted",
     response_model=list[TradeOffer],
     status_code=status.HTTP_200_OK,
+    summary="Get all accepted trades for a user",
+    description="This endpoint is used to get all accepted trades for a user",
 )
 async def get_user_accepted_trades(user: User = Depends(get_current_user)):
     trades: list[TradeOffer] = []
@@ -135,6 +149,8 @@ async def get_user_accepted_trades(user: User = Depends(get_current_user)):
     "/myTrades/declined",
     response_model=list[TradeOffer],
     status_code=status.HTTP_200_OK,
+    summary="Get all declined trades for a user",
+    description="This endpoint is used to get all declined trades for a user",
 )
 async def get_user_declined_trades(user: User = Depends(get_current_user)):
     trades: list[TradeOffer] = []
@@ -146,18 +162,23 @@ async def get_user_declined_trades(user: User = Depends(get_current_user)):
     return trades
 
 
-@router.get("/test")
-async def test(user: User = Depends(get_current_user)):
-    return user
-
-
-@router.get("/{tradeID}", response_model=TradeOffer, status_code=status.HTTP_200_OK)
+@router.get(
+    "/{tradeID}",
+    response_model=TradeOffer,
+    status_code=status.HTTP_200_OK,
+    summary="Get a trade",
+    description="This endpoint is used to get a trade by ID",
+)
 async def get_trade(tradeID: PydanticObjectId):
     return await TradeOffer.get(tradeID)
 
 
 @router.post(
-    "/accept/{tradeID}", response_model=TradeOffer, status_code=status.HTTP_200_OK
+    "/accept/{tradeID}",
+    response_model=TradeOffer,
+    status_code=status.HTTP_200_OK,
+    summary="Accept a trade",
+    description="This endpoint is used to accept a trade by ID",
 )
 async def accept_trade(
     tradeID: PydanticObjectId, user: User = Depends(get_current_user)
@@ -192,7 +213,11 @@ async def accept_trade(
 
 
 @router.post(
-    "/decline/{tradeID}", response_model=TradeOffer, status_code=status.HTTP_200_OK
+    "/decline/{tradeID}",
+    response_model=TradeOffer,
+    status_code=status.HTTP_200_OK,
+    summary="Decline a trade",
+    description="This endpoint is used to decline a trade by ID",
 )
 async def decline_trade(
     tradeID: PydanticObjectId, user: User = Depends(get_current_user)

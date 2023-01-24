@@ -91,3 +91,8 @@ class UserRegister(BaseModel):
                 },
             }
         }
+
+
+class UserNewPassword(BaseModel):
+    oldPassword: str
+    newPassword: str

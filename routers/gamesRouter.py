@@ -18,10 +18,12 @@ router = APIRouter(
 
 # Create
 @router.post(
-    "/new",
+    "",
     response_model=GameAbstract,
     status_code=status.HTTP_201_CREATED,
     tags=[Tags.Games],
+    summary="Create a new game",
+    description="This endpoint is used to create a new game",
 )
 async def create_game(
     gameIn: GameAbstract = Body(
@@ -45,7 +47,13 @@ async def create_game(
 
 
 # Read
-@router.get("", response_model=list[GameAbstract], status_code=status.HTTP_200_OK)
+@router.get(
+    "",
+    response_model=list[GameAbstract],
+    status_code=status.HTTP_200_OK,
+    summary="Get all games",
+    description="This endpoint is used to get all games",
+)
 async def get_games():
     gameList: list[GameAbstract] = []
     async for game in GameAbstract.find_all():
@@ -53,14 +61,24 @@ async def get_games():
     return gameList
 
 
-@router.get("/{game_id}", response_model=GameAbstract, status_code=status.HTTP_200_OK)
+@router.get(
+    "/{game_id}",
+    response_model=GameAbstract,
+    status_code=status.HTTP_200_OK,
+    summary="Get a game",
+    description="This endpoint is used to get a game by ID",
+)
 async def get_game(game_id: PydanticObjectId):
     return await GameAbstract.get(game_id)
 
 
 # Update
 @router.put(
-    "/{game_id}", response_model=GameAbstract, status_code=status.HTTP_202_ACCEPTED
+    "/{game_id}",
+    response_model=GameAbstract,
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Update a game",
+    description="This endpoint is used to update a game by ID",
 )
 async def update_game(
     game_id: PydanticObjectId,
@@ -88,6 +106,8 @@ async def update_game(
     "/{game_id}",
     response_model=list[GameAbstract],
     status_code=status.HTTP_202_ACCEPTED,
+    summary="Delete a game",
+    description="This endpoint is used to delete a game by ID",
 )
 async def delete_game(game_id: PydanticObjectId):
     game = await GameAbstract.get(game_id)
@@ -99,7 +119,13 @@ async def delete_game(game_id: PydanticObjectId):
 
 
 # Search
-@router.get("/search/{search_term}", response_model=SearchResults)
+@router.get(
+    "/search/{search_term}",
+    response_model=SearchResults,
+    status_code=status.HTTP_200_OK,
+    summary="Search for a game",
+    description="This endpoint is used to search for a game by name, tag, platform, or publisher",
+)
 async def search_games(search_term: str, user: User = Depends(oath2_scheme)):
     totalResults = 0
     nameSearch = []
