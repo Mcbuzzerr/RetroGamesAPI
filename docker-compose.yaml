@@ -1,0 +1,32 @@
+version: '3'
+networks:
+  distributed:
+    driver: bridge
+services:
+  retro-games-api:
+    container_name: retro-games-api
+    build: ./
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017
+      - SECRET_KEY=7a659b3e5f6f62768342612137313c6ced900d56b49acccf11c86185e4af91ec
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=525600
+    volumes:
+      - ./:/app
+    networks:
+      - distributed
+    depends_on:
+      - mongodb
+  mongodb:
+    container_name: mongodb
+    image: mongo
+    ports:
+      - "2717:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - distributed
+volumes:
+  mongodb_data:
