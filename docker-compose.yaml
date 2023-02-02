@@ -3,30 +3,62 @@ networks:
   distributed:
     driver: bridge
 services:
-  retro-games-api:
-    container_name: retro-games-api
-    build: ./
+  retro-games-api-1: # FastAPI application
+    container_name: retro-games-api-1
+    build: ./api
+    # deploy:
+    #   replicas: 3
     ports:
-      - "8000:8000"
+      - "801:8000"
     environment:
       - MONGO_URI=mongodb://mongodb:27017
       - SECRET_KEY=7a659b3e5f6f62768342612137313c6ced900d56b49acccf11c86185e4af91ec
       - ALGORITHM=HS256
       - ACCESS_TOKEN_EXPIRE_MINUTES=525600
     volumes:
-      - ./:/app
+      - ./api:/app
     networks:
       - distributed
     depends_on:
       - mongodb
-  mongodb:
+  retro-games-api-2: # FastAPI application
+    container_name: retro-games-api-2
+    build: ./api
+    # deploy:
+    #   replicas: 3
+    ports:
+      - "802:8000"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017
+      - SECRET_KEY=7a659b3e5f6f62768342612137313c6ced900d56b49acccf11c86185e4af91ec
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=525600
+    volumes:
+      - ./api:/app
+    networks:
+      - distributed
+    depends_on:
+      - mongodb
+  mongodb: # MongoDB database
     container_name: mongodb
     image: mongo
     ports:
-      - "2717:27017"
+      - "2718:27017"
     volumes:
       - mongodb_data:/data/db
     networks:
       - distributed
+  nginx: # NGINX load balancer
+    container_name: mynginx
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - distributed
+    depends_on:
+      - retro-games-api-1
+      - retro-games-api-2
 volumes:
   mongodb_data:

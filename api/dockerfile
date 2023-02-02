@@ -1,0 +1,15 @@
+FROM python:3.10-slim
+
+# ENV MONGO_URI=mongodb://mongodb:27017
+# ENV SECRET_KEY=7a659b3e5f6f62768342612137313c6ced900d56b49acccf11c86185e4af91ec
+# ENV ALGORITHM=HS256
+# ENV ACCESS_TOKEN_EXPIRE_MINUTES=525600
+
+# In a non-development environment, you should not use the --reload flag
+# Also in a non-development environment, I should be copying the source code
+# into the image, and not mounting it as a volume
+
+WORKDIR /app
+COPY requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

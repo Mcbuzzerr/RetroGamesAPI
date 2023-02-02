@@ -1,0 +1,9 @@
+# Not actually in use, instead I'm using the docker-compose.yml file and mapping the config to a local volume
+# This is not good for production, but it's good for development
+
+
+# FROM nginx
+
+# WORKDIR /etc/nginx/conf.d
+# RUN rm default.conf
+# COPY nginx.conf ./default.conf
