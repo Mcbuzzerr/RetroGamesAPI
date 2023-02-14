@@ -76,7 +76,7 @@ services:
     depends_on:
       - retro-games-kafka-zookeeper
     ports:
-      - "29092:29092" # Main port for Kafka # Might not be
+      - "29092:29092" # Main port for Kafka
       # - "9092:9092"
       # - "9101:9101"
     environment:

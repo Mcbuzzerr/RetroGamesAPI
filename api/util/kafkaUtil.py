@@ -4,12 +4,10 @@ from confluent_kafka import KafkaException, Consumer, Producer
 
 # Producer Class
 class producer:
-    def __init__(
-        self, configs: dict = {"bootstrap.servers": "kafka-simple-broker:9092"}
-    ):
+    def __init__(self, configs: dict = {"bootstrap.servers": "localhost:9092"}):
         if configs.get("bootstrap.servers") is None:
             config = {
-                "bootstrap.servers": "kafka-simple-broker:9092",
+                "bootstrap.servers": "localhost:9092",
             }
         else:
             config = configs
@@ -35,26 +33,28 @@ class producer:
 class consumer:
     def __init__(
         self,
-        configs: dict = {"bootstrap.servers": "localhost:9092", "doAutoStart": False},
+        configs: dict = {
+            "bootstrap.servers": "localhost:9092",
+            "doAutoStart": False,
+            "group.id": "test-consumer-group",
+        },
     ):
+        config = configs
         if configs.get("bootstrap.servers") is None:
-            config = {
-                "bootstrap.servers": "localhost:9092",
-            }
-        else:
-            config = configs
+            config["bootstrap.servers"] = "localhost:9092"
+        if configs.get("group.id") is None:
+            config["group.id"] = "test-consumer-group"
+        if configs.get("doAutoStart") is None:
+            config["doAutoStart"] = False
 
         self.c = Consumer(config)
         print("Consumer created")
-
-        print("Available topics: ", self.c.list_topics().topics)
-        self.c.subscribe(["accounts"])
-        self.loop: bool = True
-        if configs.get("doAutoStart") is not None:
+        if config.get("doAutoStart"):
             self.consumeLoop()
 
-    # Upload messages to mongoDB
-    def consumeLoop(self):
+    def consumeLoop(self, topic):
+        self.loop = True
+        self.c.subscribe([topic])
         while self.loop:
             msg = self.c.poll(1.0)
             if msg is None:

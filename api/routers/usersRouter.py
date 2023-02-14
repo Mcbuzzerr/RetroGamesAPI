@@ -7,6 +7,7 @@ from models import Tags
 from decouple import config
 from datetime import timedelta
 from dependencies import create_access_token, get_current_user, generate_url
+from util.kafkaUtil import producer
 import bcrypt
 
 router = APIRouter(
@@ -73,6 +74,7 @@ async def test(user: User = Depends(get_current_user)):
     tags=[Tags.Auth],
 )
 async def create_user(newUser: UserRegister):
+    producerInstance = producer({"bootstrap.servers": "retro-games-kafka-broker:29092"})
     user = await User(
         id=PydanticObjectId(),
         username=newUser.username,
@@ -84,6 +86,8 @@ async def create_user(newUser: UserRegister):
         street_address=newUser.street_address,
     ).create()
     # TODO: Hash password
+    print("LORG")
+    producerInstance.produce("user", user.dict().__str__().encode("utf-8"))
     return UserOut(**user.dict())
 
 
