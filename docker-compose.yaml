@@ -39,6 +39,22 @@ services:
       - distributed
     depends_on:
       - mongodb
+  retro-games-email-service:
+    container_name: retro-games-email-service
+    build: ./email-service
+    # deploy:
+    #   replicas: 3
+    ports:
+      - "803:8000"
+    environment:
+      - MAIL_PASSWORD = t2vUS9SRjNTGYeN68w
+      - MAIL_FROM = sadie.roberts@ethereal.email
+      - MAIL_SERVER = smtp.ethereal.email
+      - MAIL_PORT = 587
+    volumes:
+      - ./email-service:/app
+    networks:
+      - distributed
   mongodb: # MongoDB database
     container_name: mongodb
     image: mongo

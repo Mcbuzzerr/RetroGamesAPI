@@ -3,6 +3,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from beanie import PydanticObjectId
 from models.userModel import User, UserOut, UserRegister, UserUpdate, UserNewPassword
 from models.gameModel import OwnedGame, GameAbstract
+from models import kafkaModels
 from models import Tags
 from decouple import config
 from datetime import timedelta
@@ -75,7 +76,7 @@ async def test(user: User = Depends(get_current_user)):
 )
 async def create_user(newUser: UserRegister):
     producerInstance = producer({"bootstrap.servers": "retro-games-kafka-broker:29092"})
-    user = await User(
+    user: User = await User(
         id=PydanticObjectId(),
         username=newUser.username,
         email=newUser.email,
@@ -87,7 +88,9 @@ async def create_user(newUser: UserRegister):
     ).create()
     # TODO: Hash password
     print("LORG")
-    producerInstance.produce("user", user.dict().__str__().encode("utf-8"))
+    producerInstance.produce(
+        "user", user.dict().__str__().encode("utf-8"), "user-register"
+    )
     return UserOut(**user.dict())
 
 
@@ -121,6 +124,17 @@ async def change_password(
     ):
         currentUser.password = bcrypt.hashpw(
             body.newPassword.encode("utf-8"), bcrypt.gensalt()
+        )
+        producerInstance = producer(
+            {"bootstrap.servers": "retro-games-kafka-broker:29092"}
+        )
+        message = kafkaModels.EmailAlert(
+            recipient=currentUser.email,
+            message="Your password has been updated",
+            subject="Password Updated",
+        )
+        producerInstance.produce(
+            "email-queue", message.dict().__str__().encode("utf-8"), "pw-update"
         )
         await currentUser.save()
     else:

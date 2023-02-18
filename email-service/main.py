@@ -1,6 +1,8 @@
+import asyncio
 from fastapi import FastAPI
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
 from decouple import config
+from util.kafkaUtil import consumer
 
 app = FastAPI()
 
@@ -17,16 +19,36 @@ conf = ConnectionConfig(
 fastmail = FastMail(conf)
 
 
-@app.get("/")
-async def root():
+@app.on_event("startup")
+async def startTradeConsumer():
+    consumerInstance = consumer(
+        {
+            "bootstrap.servers": "retro-games-kafka-broker:29092",
+            "group.id": "email-consumer",
+        }
+    )
+
+    loop = asyncio.get_event_loop()
+    loop.create_task(consumerInstance.consumeLoop("email-queue", sendEmail))
+    # consumerInstance.consumeLoop("email-queue", sendEmail)
+
+
+async def sendEmail(**kafkaData):
+    for item in kafkaData:
+        if item == "subject":
+            subject = kafkaData[item]
+        elif item == "recipient":
+            recipient = kafkaData[item]
+        elif item == "message":
+            msg = kafkaData[item]
+
     message = MessageSchema(
-        subject="Hello World",
-        recipients=["mcbuzzer@gmail.com"],
-        body="This is a test email",
+        subject=subject,
+        recipients=[recipient],
+        body=msg,
         subtype="plain",
     )
     await fastmail.send_message(message)
-    return {"message": "Email sent"}
 
 
 if __name__ == "__main__":
