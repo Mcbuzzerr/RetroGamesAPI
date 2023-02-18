@@ -6,6 +6,9 @@ from models.userModel import User, UserOut
 from models.gameModel import GameAbstract, OwnedGame
 from models.tradeModel import TradeOffer, TradeStatus, TradeOfferIn
 from models import Tags
+from models import kafkaModels
+from util.kafkaUtil import producer
+
 
 router = APIRouter(
     prefix="/trades",
@@ -93,6 +96,17 @@ async def create_trade(
     currentUser.tradeHistory.append(generate_url("trades", offer.id))
     await currentUser.save()
     await user.save()
+
+    producerInstance = producer({"bootstrap.servers": "retro-games-kafka-broker:29092"})
+    message = kafkaModels.EmailAlert(
+        recipients=[user.email, currentUser.email],
+        subject="New Trade Request",
+        message=f"{currentUser.username} has requested a trade with {user.username}. Please visit your trade history to accept or decline the trade.",
+    )
+    producerInstance.produce(
+        "email-queue", message.dict().__str__().encode("utf-8"), "trade-created"
+    )
+
     return offer
 
 
@@ -209,6 +223,17 @@ async def accept_trade(
     await user.save()
     await offerer.save()
     await trade.save()
+
+    producerInstance = producer({"bootstrap.servers": "retro-games-kafka-broker:29092"})
+    message = kafkaModels.EmailAlert(
+        recipients=[user.email, offerer.email],
+        subject="Trade Accepted",
+        message=f"{user.username} has accepted your trade with {offerer.username}. Please visit your trade history to view the trade.",
+    )
+    producerInstance.produce(
+        "email-queue", message.dict().__str__().encode("utf-8"), "trade-created"
+    )
+
     return trade
 
 
@@ -235,4 +260,15 @@ async def decline_trade(
         )
     trade.status = TradeStatus.declined
     await trade.save()
+    offerer = await User.get(trade.offerer.split("/")[-1])
+    producerInstance = producer({"bootstrap.servers": "retro-games-kafka-broker:29092"})
+    message = kafkaModels.EmailAlert(
+        recipients=[user.email, offerer.email],
+        subject="Trade Declined",
+        message=f"{user.username} has declined your trade with {offerer.username}. Please visit your trade history to view the trade.",
+    )
+    producerInstance.produce(
+        "email-queue", message.dict().__str__().encode("utf-8"), "trade-created"
+    )
+
     return trade

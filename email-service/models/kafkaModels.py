@@ -4,6 +4,6 @@ from enum import Enum
 
 
 class EmailAlert(BaseModel):
-    recipient: str
+    recipients: list[str]
     subject: str
     message: str

@@ -129,7 +129,7 @@ async def change_password(
             {"bootstrap.servers": "retro-games-kafka-broker:29092"}
         )
         message = kafkaModels.EmailAlert(
-            recipient=currentUser.email,
+            recipients=[currentUser.email],
             message="Your password has been updated",
             subject="Password Updated",
         )

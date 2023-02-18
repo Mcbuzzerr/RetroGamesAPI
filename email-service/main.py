@@ -2,7 +2,7 @@ import asyncio
 from fastapi import FastAPI
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
 from decouple import config
-from util.kafkaUtil import consumer
+from util.kafkaUtil import consumer, DTicket
 
 app = FastAPI()
 
@@ -16,6 +16,7 @@ conf = ConnectionConfig(
     MAIL_SSL_TLS=False,
 )
 
+DTicket(conf, "Connection Config")
 fastmail = FastMail(conf)
 
 
@@ -37,14 +38,14 @@ async def sendEmail(**kafkaData):
     for item in kafkaData:
         if item == "subject":
             subject = kafkaData[item]
-        elif item == "recipient":
-            recipient = kafkaData[item]
+        elif item == "recipients":
+            recipients = kafkaData[item]
         elif item == "message":
             msg = kafkaData[item]
 
     message = MessageSchema(
         subject=subject,
-        recipients=[recipient],
+        recipients=recipients,
         body=msg,
         subtype="plain",
     )
