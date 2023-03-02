@@ -13,6 +13,11 @@ app.include_router(usersRouter.router)
 app.include_router(gamesRouter.router)
 app.include_router(tradesRouter.router)
 
+from starlette_exporter import PrometheusMiddleware, handle_metrics
+
+app.add_middleware(PrometheusMiddleware)
+app.add_route("/metrics", handle_metrics)
+
 
 @app.on_event("startup")
 async def app_init():

@@ -108,5 +108,21 @@ services:
       # KAFKA_JMX_HOSTNAME: localhost
     networks:
       - distributed
+  retro-games-prometheus:
+    container_name: retro-games-prometheus
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - prometheus-data:/prometheus
+    networks:
+      - distributed
+    depends_on:
+      - retro-games-email-service
+      - nginx
+      - retro-games-kafka-broker
+
 volumes:
   mongodb_data:
+  prometheus-data:

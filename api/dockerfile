@@ -7,7 +7,7 @@ FROM python:3.10-slim
 
 # In a non-development environment, you should not use the --reload flag
 # Also in a non-development environment, I should be copying the source code
-# into the image, and not mounting it as a volume
+# into the image, and not mounting it as a volume (see docker-compose.yml)
 
 WORKDIR /app
 COPY requirements.txt /app/requirements.txt

@@ -1,0 +1,21 @@
+groups:
+- name: APIAlerts
+  rules:
+    - alert: InstanceDown
+      expr: up{job="api-services"} < 1
+      for: 1m
+- name: MongoDBAlerts
+  rules:
+    - alert: MongoDBDown
+      expr: up{job="mongodb"} < 1
+      for: 1m
+- name: NginxAlerts
+  rules:
+    - alert: NginxDown
+      expr: up{job="mynginx"} < 1
+      for: 1m
+- name: KafkaAlerts
+  rules:
+    - alert: KafkaDown
+      expr: up{job="kafka"} < 1
+      for: 1m
